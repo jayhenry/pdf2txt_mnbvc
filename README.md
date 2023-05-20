@@ -35,7 +35,8 @@ https://pymupdf.readthedocs.io/en/latest/tutorial.html#working-with-pages
 
 https://pymupdf.readthedocs.io/en/latest/page.html
 
-https://pymupdf.readthedocs.io/en/latest/recipes-text.html
+https://pymupdf.readthedocs.io/en/latest/recipes-text.html#how-to-extract-text-in-natural-reading-order
+https://pymupdf.readthedocs.io/en/latest/recipes-text.html#how-to-extract-tables-from-documents
 
 
 
