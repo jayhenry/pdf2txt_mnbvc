@@ -4,25 +4,33 @@
  Author: zhaopenghao
  Create Time: 2023/5/14
 """
-from langchain.document_loaders import PyPDFLoader, PyMuPDFLoader, PDFMinerLoader
+# from langchain.document_loaders import PyPDFLoader, PyMuPDFLoader, PDFMinerLoader
+import fitz
+import pprint
+
 
 def convert(src_file, dest_file, column_num=1):
     """
     :param src_file: pdf
     :param dest_file: txt
     """
+    print(f"start convert {src_file} to {dest_file}" )
+    doc = fitz.open(src_file, filetype='pdf')
+    assert isinstance(doc, fitz.Document)
+    print(f">> PDF info: PageCount {doc.page_count}, metadata:")
+    pprint.pprint(doc.metadata)
 
-    check_format(column_num)
-
-    loader = PyMuPDFLoader(src_file)
-    docs = loader.load()
-    with open(dest_file, 'w') as f:
-        for d in docs:
-            f.write(d.page_content)
+    with open(dest_file, 'w', encoding='utf8') as f:
+        for page in doc:
+            check_format(page, column_num)
+            text = page.get_text()
+            f.write(text)
 
 
-def check_format(column_num):
+def check_format(page: fitz.Page, column_num):
     # check if there's figure or not
+    image_list = page.get_images()
+    assert len(image_list) == 0, f"Found image in page {page.number}"
     # check if there's table or not
     # check column_num
     pass
