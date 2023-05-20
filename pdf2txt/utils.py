@@ -31,7 +31,11 @@ def check_format(page: fitz.Page, column_num):
     # check if there's figure or not
     image_list = page.get_images()
     assert len(image_list) == 0, f"Found image in page {page.number}"
-    # check if there's table or not
-    # check column_num
+    #todo:
+    # page.get_drawings()
+
+    # todo: check if there's table or not
+    assert page.first_widget is None, f"Found form in page {page.number}"
+    # todo: check column_num
     pass
 
