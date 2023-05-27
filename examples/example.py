@@ -11,8 +11,12 @@ import pdf2txt
 # dest_file = './逍遥游-带图.txt'
 # src_file = '../data/逍遥游-带表格.pdf'
 # dest_file = './逍遥游-带表格.txt'
-src_file = '../data/逍遥游-分栏.pdf'
-dest_file = './逍遥游-分栏.txt'
+# src_file = '../data/逍遥游-分栏.pdf'
+# dest_file = './逍遥游-分栏.txt'
+# src_file = '../data/逍遥游-带表格.pdf'
+# dest_file = './逍遥游-带表格.txt'
+src_file = '../data/逍遥游-页眉页脚.pdf'
+dest_file = './逍遥游-页眉页脚.txt'
 
-pdf2txt.convert(src_file, dest_file, column_num=2)
+pdf2txt.convert(src_file, dest_file, column_num=1)
 
