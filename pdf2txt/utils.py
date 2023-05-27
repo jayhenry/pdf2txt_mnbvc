@@ -49,13 +49,11 @@ def check_format(page: fitz.Page, column_num):
     # check if there's a figure or not
     image_list = page.get_images()
     assert len(image_list) == 0, f"Found image in page {page.number}"
-    #todo:
-    # page.get_drawings()
 
-    # todo: check if there's a form or not
+    # xtodo: check if there's a form or not
     assert page.first_widget is None, f"Found form in page {page.number}"
 
-    # todo: check if there's a table or not
+    # xtodo: check if there's a table or not
     # https://github.com/pymupdf/PyMuPDF-Utilities/blob/master/table-analysis/gridlines-to-pandas.py
     # vertical / horizontal line coordinates. Python 'sets' avoid duplicates.
     vert = set()  # vertical (x-) coordinates
@@ -83,7 +81,7 @@ def check_format(page: fitz.Page, column_num):
     print(f"There are {len(hori)} lines in page {page.number}")
     assert len(hori) < 2, f"Found horizontal lines >=2, there maybe tables in page {page.number}"
 
-    # todo: check column_num
+    # xtodo: check column_num
     # https://pymupdf.readthedocs.io/en/latest/app1.html#blocks
     # (x0, y0, x1, y1, "lines in block", block_no, block_type)
     blocks = page.get_text("blocks")
