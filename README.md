@@ -19,7 +19,7 @@ pdf2txt.convert(src_file, dest_file)
 - [x] 检查排版分栏
 - [ ] 换行符用 LF or CRLF?
 - [ ] pdf中排版换行并非文字逻辑换行时是否去除？
-- [ ] 去除header/footer?
+- [ ] 去除header/footer? 很难判断是否为页眉页脚，改为接受一个文本框区域，只在该区域提取文本？
 
 ## More about pdf & PyMuPDF
 ### 什么是PDF表单(PDF Form)？
