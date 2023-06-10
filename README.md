@@ -22,7 +22,7 @@ pdf2txt.convert(src_file, dest_file)
 - [x] txt中换行符用 LF or CRLF? 目前服务器通常为linux系统，所以格式采用LF（`\n`）。
 - [ ] pdf中排版换行并非文字逻辑换行时是否去除？
     - 根据下列规则，满足则去除换行符：换行符前没有标点符号，并且最后一个字符位置接近右侧边缘。
-- [ ] 去除header/footer? 
+- [x] 去除header/footer? 
     - 很难判断是否为页眉页脚，改为接受一个文本框区域，只在该区域提取文本
 - [ ] 是否能和ocr结合？
 
