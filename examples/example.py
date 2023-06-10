@@ -15,8 +15,15 @@ import pdf2txt
 # dest_file = './逍遥游-分栏.txt'
 # src_file = '../data/逍遥游-带表格.pdf'
 # dest_file = './逍遥游-带表格.txt'
-src_file = '../data/逍遥游-页眉页脚.pdf'
-dest_file = './逍遥游-页眉页脚.txt'
+# src_file = '../data/逍遥游-页眉页脚.pdf'
+# dest_file = './逍遥游-页眉页脚.txt'
 
-pdf2txt.convert(src_file, dest_file, column_num=1)
+src_file = '../data/逍遥游-页眉页脚-分栏-标题不分栏.pdf'
+# dest_file = './逍遥游-页眉页脚-分栏-标题不分栏-withoutClip.txt'
+# clip = None
+dest_file = './逍遥游-页眉页脚-分栏-标题不分栏-withClip.txt'
+clip = [75, 70, 510, 768]  # x0,y0,x1,y1
+
+pdf2txt.convert(src_file, dest_file, column_num=2, clip=clip)
+
 

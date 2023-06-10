@@ -12,7 +12,7 @@ import fitz
 import numpy as np
 
 
-def convert(src_file, dest_file, column_num=1):
+def convert(src_file, dest_file, column_num=1, clip=None):
     """
     :param src_file: pdf
     :param dest_file: txt
@@ -21,17 +21,54 @@ def convert(src_file, dest_file, column_num=1):
     doc = fitz.open(src_file, filetype='pdf')
     assert isinstance(doc, fitz.Document)
     print(f">> PDF info: PageCount {doc.page_count}, metadata:")
+    # https://pymupdf.readthedocs.io/en/latest/tutorial.html#accessing-meta-data
     pprint.pprint(doc.metadata)
 
+    if clip is not None:
+        assert len(clip) == 4, "clip must be list: [x0, y0, x1, y1]"
+        clip = fitz.Rect(clip)
+
     with open(dest_file, 'w', encoding='utf8') as f:
+        # https://pymupdf.readthedocs.io/en/latest/document.html#Document.pages
+        # for page in doc.pages():  # both are ok
         for page in doc:
             assert isinstance(page, fitz.Page)
             # assert not isinstance(page, fitz.TextPage)
             check_format(page, column_num)
-            text = page.get_text()
 
-            # https://pymupdf.readthedocs.io/en/latest/app1.html#plain-text
-            # text = page.get_text("text", sort=True)
+            # Page.get_text()会提取当前页内容生成一个TextPage对象，然后实际调用的是TextPage.extractText()
+            # 关于TextPage的概念可以参考 https://pymupdf.readthedocs.io/en/latest/app1.html#general-structure-of-a-textpage
+
+            # https://pymupdf.readthedocs.io/en/latest/page.html#Page.get_text
+            # https://pymupdf.readthedocs.io/en/latest/textpage.html
+            text = page.get_text(
+                # “text” – TextPage.extractTEXT(), default
+                # “blocks” – TextPage.extractBLOCKS()
+                # “words” – TextPage.extractWORDS()
+                # “html” – TextPage.extractHTML()
+                # “xhtml” – TextPage.extractXHTML()
+                # “xml” – TextPage.extractXML()
+                # “dict” – TextPage.extractDICT()
+                # “json” – TextPage.extractJSON()
+                # “rawdict” – TextPage.extractRAWDICT()
+                # “rawjson” – TextPage.extractRAWJSON()
+                "text",  # default, TextPage.extractTEXT()
+                # (rect-like)–(new in v1.17.7)restrict extracted text to this rectangle. If None, the full page is taken
+                clip=clip,  # default None
+                # flags (int) – (new in v1.16.2) indicator bits to control whether to include images or
+                # how text should be handled with respect to white spaces and ligatures.
+                flags=None,
+                # use a previously created TextPage. This reduces execution time very significantly:
+                # by more than 50% and up to 95%, depending on the extraction option. If specified,
+                # the ‘flags’ and ‘clip’ arguments are ignored, because they are textpage-only properties.
+                # If omitted, a new, temporary textpage will be created.
+                textpage=None,
+                # sort (bool) – (new in v1.19.1) sort the output by vertical, then horizontal coordinates.
+                # In many cases, this should suffice to generate a “natural” reading order
+                sort=False,
+            )
+
+            # blocks的提取: https://pymupdf.readthedocs.io/en/latest/app1.html#blocks
 
             f.write(text)
 
