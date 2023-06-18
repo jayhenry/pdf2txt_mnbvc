@@ -5,18 +5,28 @@
  Create Time: 2023/5/14
 """
 # from langchain.document_loaders import PyPDFLoader, PyMuPDFLoader, PDFMinerLoader
+from typing import List, Optional
 import pprint
 
-import fitz
-
 import numpy as np
+import fitz
+from fitz.fitz import (
+    TEXT_INHIBIT_SPACES,
+    TEXT_PRESERVE_LIGATURES,
+    TEXT_PRESERVE_WHITESPACE,
+)
+
+from .layout import page_layout
 
 
-def convert(src_file, dest_file, column_num=1, clip=None):
-    """
-    :param src_file: pdf
-    :param dest_file: txt
-    """
+def convert(src_file: str, dest_file: str,
+            do_check: bool = False, column_num: int = 1,
+            clip: Optional[list] = None,  # [x0, y0, x1, y1]
+            sort: bool = False,
+            mode: str = 'simple',  # layout, todo: support 'auto'
+            flags_conf: Optional[dict] = None,
+            layout_conf: Optional[dict] = None,
+            ) -> None:
     print(f"start convert {src_file} to {dest_file}" )
     doc = fitz.open(src_file, filetype='pdf')
     assert isinstance(doc, fitz.Document)
@@ -24,53 +34,80 @@ def convert(src_file, dest_file, column_num=1, clip=None):
     # https://pymupdf.readthedocs.io/en/latest/tutorial.html#accessing-meta-data
     pprint.pprint(doc.metadata)
 
+    # flags
+    flags = TEXT_PRESERVE_LIGATURES | TEXT_PRESERVE_WHITESPACE
+    flags_conf = flags_conf or {}
+    if flags_conf.get("convert_white", False):
+        flags ^= TEXT_PRESERVE_WHITESPACE
+    if flags_conf.get("noligatures", False):
+        flags ^= TEXT_PRESERVE_LIGATURES
+    if flags_conf.get("extra_spaces", False):
+        flags ^= TEXT_INHIBIT_SPACES
+
     if clip is not None:
         assert len(clip) == 4, "clip must be list: [x0, y0, x1, y1]"
         clip = fitz.Rect(clip)
 
-    with open(dest_file, 'w', encoding='utf8') as f:
+    with open(dest_file, 'wb') as f:
         # https://pymupdf.readthedocs.io/en/latest/document.html#Document.pages
         # for page in doc.pages():  # both are ok
         for page in doc:
             assert isinstance(page, fitz.Page)
             # assert not isinstance(page, fitz.TextPage)
-            check_format(page, column_num)
+            # fitz.TextPage
+            if do_check:
+                check_format(page, column_num)
 
             # Page.get_text()会提取当前页内容生成一个TextPage对象，然后实际调用的是TextPage.extractText()
             # 关于TextPage的概念可以参考 https://pymupdf.readthedocs.io/en/latest/app1.html#general-structure-of-a-textpage
+            if mode == 'simple':
+                simple_extract(f, page, clip, sort, flags)
+            else:
+                assert mode == 'layout', f"mode must be one of [simple, layout]! {mode} is not supported."
+                assert column_num == 1, f"layout mode doesn't support column_num>1 now."
+                layout_conf = layout_conf or {}
+                grid = layout_conf.get('grid', 2)
+                fontsize = layout_conf.get('fontsize', 3)
+                page_layout(page, f, grid, fontsize, noformfeed=True, skip_empty=False, flags=flags, clip=clip)
 
-            # https://pymupdf.readthedocs.io/en/latest/page.html#Page.get_text
-            # https://pymupdf.readthedocs.io/en/latest/textpage.html
-            text = page.get_text(
-                # “text” – TextPage.extractTEXT(), default
-                # “blocks” – TextPage.extractBLOCKS()
-                # “words” – TextPage.extractWORDS()
-                # “html” – TextPage.extractHTML()
-                # “xhtml” – TextPage.extractXHTML()
-                # “xml” – TextPage.extractXML()
-                # “dict” – TextPage.extractDICT()
-                # “json” – TextPage.extractJSON()
-                # “rawdict” – TextPage.extractRAWDICT()
-                # “rawjson” – TextPage.extractRAWJSON()
-                "text",  # default, TextPage.extractTEXT()
-                # (rect-like)–(new in v1.17.7)restrict extracted text to this rectangle. If None, the full page is taken
-                clip=clip,  # default None
-                # flags (int) – (new in v1.16.2) indicator bits to control whether to include images or
-                # how text should be handled with respect to white spaces and ligatures.
-                flags=None,
-                # use a previously created TextPage. This reduces execution time very significantly:
-                # by more than 50% and up to 95%, depending on the extraction option. If specified,
-                # the ‘flags’ and ‘clip’ arguments are ignored, because they are textpage-only properties.
-                # If omitted, a new, temporary textpage will be created.
-                textpage=None,
-                # sort (bool) – (new in v1.19.1) sort the output by vertical, then horizontal coordinates.
-                # In many cases, this should suffice to generate a “natural” reading order
-                sort=False,
-            )
 
-            # blocks的提取: https://pymupdf.readthedocs.io/en/latest/app1.html#blocks
+def simple_extract(f, page, clip, sort, flags):
+    # https://pymupdf.readthedocs.io/en/latest/page.html#Page.get_text
+    # https://pymupdf.readthedocs.io/en/latest/textpage.html
+    text = page.get_text(
+        # “text” – TextPage.extractTEXT(), default
+        # “blocks” – TextPage.extractBLOCKS()
+        # “words” – TextPage.extractWORDS()
+        # “html” – TextPage.extractHTML()
+        # “xhtml” – TextPage.extractXHTML()
+        # “xml” – TextPage.extractXML()
+        # “dict” – TextPage.extractDICT()
+        # “json” – TextPage.extractJSON()
+        # “rawdict” – TextPage.extractRAWDICT()
+        # “rawjson” – TextPage.extractRAWJSON()
+        "text",  # default, TextPage.extractTEXT()
+        # (rect-like)–(new in v1.17.7)restrict extracted text to this rectangle. If None, the full page is taken
+        clip=clip,  # default None
+        # flags (int) – (new in v1.16.2) indicator bits to control whether to include images or
+        # how text should be handled with respect to white spaces and ligatures.
+        flags=flags,
+        # use a previously created TextPage. This reduces execution time very significantly:
+        # by more than 50% and up to 95%, depending on the extraction option. If specified,
+        # the ‘flags’ and ‘clip’ arguments are ignored, because they are textpage-only properties.
+        # If omitted, a new, temporary textpage will be created.
+        textpage=None,
+        # sort (bool) – (new in v1.19.1) sort the output by vertical, then horizontal coordinates.
+        # In many cases, this should suffice to generate a “natural” reading order
+        sort=sort,
+    )
 
-            f.write(text)
+    # blocks的提取: https://pymupdf.readthedocs.io/en/latest/app1.html#blocks
+    # (x0, y0, x1, y1, "lines in block", block_no, block_type)
+
+    f.write(text.encode("utf8", errors="surrogatepass"))
+    eop = b'\n'
+    f.write(eop)
+    return
 
 
 def clean_list(values):

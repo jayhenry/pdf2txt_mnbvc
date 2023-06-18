@@ -22,9 +22,14 @@ pdf2txt.convert(src_file, dest_file)
 - [x] txt中换行符用 LF or CRLF? 目前服务器通常为linux系统，所以格式采用LF（`\n`）。
 - [ ] pdf中排版换行并非文字逻辑换行时是否去除？
     - 根据下列规则，满足则去除换行符：换行符前没有标点符号，并且最后一个字符位置接近右侧边缘。
+    - 问题：标题、子标题等最后也没有标点符号，但是需要换行
+    - 问题：对于混合双栏（标题单栏、内容双栏），很难定义“右侧边缘”
+    - 
 - [x] 去除header/footer? 
     - 很难判断是否为页眉页脚，改为接受一个文本框区域，只在该区域提取文本
+- [x] 支持simple和layout两种pdf解析模式，关于layout模式见下面“按自然阅读顺序提取文本”一节说明
 - [ ] 是否能和ocr结合？
+- [ ] 比较和pdf转word的效果
 
 ## 关于换行符和换页符
 有多个字符表示类似含义，在不同系统上默认的方式不同，但是现代文本编辑器一般都兼容这些方式。
@@ -104,6 +109,8 @@ https://pymupdf.readthedocs.io/en/latest/recipes-text.html#how-to-extract-text-f
 
 https://pymupdf.readthedocs.io/en/latest/recipes-drawing-and-graphics.html
 
+### 提取并保存图片
+https://github.com/pymupdf/PyMuPDF-Utilities/blob/f056def3f9b3b910a7f6eab4d03b167af49eec56/text-extraction/fitzcli.py#L545
 
 ### 按自然阅读顺序提取文本
 1. 最简单的提取[方法](https://github.com/pymupdf/PyMuPDF-Utilities/blob/master/text-extraction/PDF2Text.py)，会按pdf文件添加元素的顺序进行提取。
